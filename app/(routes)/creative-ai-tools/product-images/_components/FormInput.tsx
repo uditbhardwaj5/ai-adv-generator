@@ -1,8 +1,18 @@
 "use client"
 import React from 'react'
 import Image from 'next/image'
-import { ImagePlus } from 'lucide-react'
+import { ImagePlus, Loader2Icon, Monitor, Smartphone, Sparkles, Square } from 'lucide-react'
 import { Client } from '@neondatabase/serverless';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Button } from '@/components/ui/button';
 
 const sampleProduct= [
     '/headphone.png',
@@ -11,7 +21,14 @@ const sampleProduct= [
     '/burger.png',
     '/ice-cream.png'
 ]
-function FormInput() {
+
+type Props = {
+    onHandleInputChange: (field: 'file' | 'imageUrl' | 'description' | 'size', value: any) => void
+    OnGenerate: () => void
+    loading?: boolean
+}
+
+function FormInput({ onHandleInputChange, OnGenerate, loading = false }: Props) {
     
     const [preview, setPreview] = React.useState<string | null>();
     const onFileSelect = (files: FileList | null) => {
@@ -22,6 +39,7 @@ function FormInput() {
             alert("File size should be less than 5MB");
             return;
         }
+        onHandleInputChange('file', file);
         setPreview(URL.createObjectURL(file));
 
     }
@@ -47,14 +65,54 @@ function FormInput() {
              <div className='flex gap-5 items-center'>
                 {sampleProduct.map((product,index) => (
                     <Image src={product} alt={product} width={100} height={100} key={index} className='w-[60px] h-[60px] rounded-lg cursor-pointer hover:scale-105 transition-all'
-                    onClick={()=> setPreview(product)} />
+                    onClick={()=> {setPreview(product);
+                        onHandleInputChange('imageUrl',product)
+                    }} />
                 ))}
                 </div>     
       </div>
-      <div className='MT-8'>
+      <div className='mt-8'>
         <h2 className='font-semibold'>2. Enter product description</h2>
+        <Textarea placeholder='Tell me more about product and how you want to display' 
+        className='min-h-[150px] mt-2'
+        onChange={(event) => onHandleInputChange('description', event.target.value)}
+        />
         </div> 
-      </div>     
+      </div>
+      <div className='mt-8'>
+        <h2 className='font-semibold'>3. Select image size </h2>
+                <Select onValueChange={(value) =>onHandleInputChange('size', value)}>
+                 <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Resolution" />
+                 </SelectTrigger>
+                 <SelectContent>
+                      <SelectGroup>
+                          <SelectItem value="1024x1024">
+                            <div className='flex gap-2 items-center'>
+                                <Square className='h-4 w-4'/>
+                                <span>1:1</span>
+                            </div>                            
+                          </SelectItem>
+                          <SelectItem value="1536x1024">
+                            <div className='flex gap-2 items-center'>
+                                <Monitor className='h-4 w-4'/>
+                                <span>16:9</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="1024x1536">
+                            <div className='flex gap-2 items-center'>
+                                <Smartphone className='h-4 w-4'/>
+                                <span>9:16</span>
+                            </div>
+                          </SelectItem>
+                     </SelectGroup>
+                 </SelectContent>
+                </Select>
+        </div>
+
+        <Button disabled={loading} className='mt-5 w-full' onClick={OnGenerate}>
+           {loading ? <Loader2Icon className='animate-spin'  /> : <Sparkles />} Generate </Button>
+        <h2 className='mt-1 text-xs opacity-35'>5 Credits to Generate</h2>     
     </div>
   )
 }

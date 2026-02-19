@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore, initializeFirestore, persistentLocalCache, CACHE_SIZE_UNLIMITED } from 'firebase/firestore'
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -22,5 +22,24 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Initialize Firestore with memory cache to avoid ServiceWorker issues
+// This prevents the persistent connection that can be intercepted by ServiceWorkers
+let db;
+if (typeof window !== 'undefined') {
+    try {
+        db = initializeFirestore(app, {
+            localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED })
+        });
+    } catch (error) {
+        // Fallback to default Firestore if initialization fails
+        console.warn('Firestore initialization warning, using default:', error);
+        db = getFirestore(app);
+    }
+} else {
+    // Server-side: use default Firestore
+    db = getFirestore(app);
+}
+
+export { db };
 // const analytics = getAnalytics(app);
